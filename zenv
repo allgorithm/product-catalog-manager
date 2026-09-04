@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+# zenv — Zero-Config Docker Environment CLI for Laravel 12 & PHP 8.4+
+
+# PATH anpassen, um standardmäßige Docker-Installationspfade auf macOS einzuschließen
+export PATH="/Applications/Docker.app/Contents/Resources/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+
+# Setzen der Benutzer-ID und Gruppen-ID für den Docker-Build
+export USER_UID=$(id -u)
+export USER_GID=$(id -g)
+
+# Docker Compose Befehl ermitteln (modern vs. legacy)
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+else
+    DOCKER_COMPOSE="docker-compose"
+fi
+
+# Hilfe anzeigen
+function show_help {
+    echo -e "\033[1;36mzenv — Zero-Config Docker Environment CLI\033[0m"
+    echo -e "Nutzung: ./zenv [Befehl]"
+    echo ""
+    echo "Dienste verwalten:"
+    echo "  up            Dienste im Hintergrund starten"
+    echo "  down          Dienste stoppen und Container entfernen"
+    echo "  stop          Dienste anhalten"
+    echo "  restart       Dienste neu starten"
+    echo "  ps            Status der laufenden Container anzeigen"
+    echo "  logs [svc]    Logs anzeigen (optional für Dienst, z.B. app, web, redis)"
+    echo ""
+    echo "Laravel & Tools im App-Container ausführen:"
+    echo "  artisan ...   Ausführen von php artisan"
+    echo "  composer ...  Ausführen von composer"
+    echo "  npm ...       Ausführen von npm (z.B. ./zenv npm run dev für Vite)"
+    echo "  npx ...       Ausführen von npx"
+    echo "  php ...       Ausführen eines PHP-Befehls"
+    echo "  pest ...      Ausführen von Pest PHP Tests"
+    echo "  mariadb       Interaktive MariaDB-Konsole (Host) öffnen"
+    echo "  init          Laravel-Projekt initialisieren"
+    echo "  shell         Interaktive Shell im PHP-Container öffnen"
+    echo ""
+    echo "Beliebige andere Argumente werden direkt im 'app'-Container ausgeführt."
+}
+
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+CMD="$1"
+shift
+
+case "$CMD" in
+    up)
+        $DOCKER_COMPOSE up -d "$@"
+        ;;
+    down)
+        $DOCKER_COMPOSE down "$@"
+        ;;
+    stop)
+        $DOCKER_COMPOSE stop "$@"
+        ;;
+    restart)
+        $DOCKER_COMPOSE restart "$@"
+        ;;
+    ps)
+        $DOCKER_COMPOSE ps "$@"
+        ;;
+    logs)
+        $DOCKER_COMPOSE logs -f "$@"
+        ;;
+    artisan)
+        $DOCKER_COMPOSE exec -it app php artisan "$@"
+        ;;
+    composer)
+        $DOCKER_COMPOSE exec -it app composer "$@"
+        ;;
+    npm)
+        $DOCKER_COMPOSE exec -it app npm "$@"
+        ;;
+    npx)
+        $DOCKER_COMPOSE exec -it app npx "$@"
+        ;;
+    php)
+        $DOCKER_COMPOSE exec -it app php "$@"
+        ;;
+    pest|test)
+        $DOCKER_COMPOSE exec -it app vendor/bin/pest "$@"
+        ;;
+    mariadb|mysql)
+        mariadb -h host.docker.internal -u root laravel "$@"
+        ;;
+    shell)
+        $DOCKER_COMPOSE exec -it app bash "$@"
+        ;;
+    init|init-laravel)
+        $DOCKER_COMPOSE exec -it app bash docker/init.sh
+        ;;
+    help|-h|--help)
+        show_help
+        ;;
+    *)
+        $DOCKER_COMPOSE exec -it app "$CMD" "$@"
+        ;;
+esac
