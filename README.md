@@ -1,59 +1,184 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Product Catalog
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ein domänenorientiertes E-Commerce-Produktkatalog-System,
+entwickelt mit Zenv, Laravel und Filament.
 
-## About Laravel
+Das Projekt demonstriert die Umsetzung eines realistischen
+E-Commerce-Domänenmodells mit Domain-Driven Design (DDD).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Der Schwerpunkt liegt nicht auf einem einfachen CRUD-Backend,
+sondern auf der Modellierung von Geschäftsregeln, Invarianten,
+Value Objects, Domain Events und klar definierten Domänengrenzen.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Architektur
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Die Catalog-Domäne ist als eigenständiger Bounded Context strukturiert:
 
-## Learning Laravel
+    app/Domain/Catalog/
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+    ├── Model/
+    │   ├── Product.php
+    │   ├── ProductVariant.php
+    │   ├── Category.php
+    │   └── ValueObjects/
+    │       ├── ProductId.php
+    │       ├── VariantId.php
+    │       ├── Sku.php
+    │       ├── Money.php
+    │       ├── Size.php
+    │       ├── Color.php
+    │       ├── ProductMedia.php
+    │       └── ProductStatus.php
+    │
+    ├── Specifications/
+    │   └── ProductCanBeActivatedSpecification.php
+    │
+    ├── Events/
+    │   ├── ProductCreated.php
+    │   ├── ProductActivated.php
+    │   └── VariantAddedToProduct.php
+    │
+    └── Repositories/
+        ├── ProductRepositoryInterface.php
+        └── CategoryRepositoryInterface.php
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Domain Model
 
-## Laravel Sponsors
+`Product` bildet den Aggregate Root des Product-Aggregates.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Der Aggregate Root kapselt die relevanten Invarianten und
+kontrolliert Änderungen am Aggregate.
 
-### Premium Partners
+    Product
+       │
+       ├── ProductVariant
+       │      ├── VariantId
+       │      ├── Sku
+       │      ├── Size
+       │      └── Color
+       │
+       ├── Money
+       │
+       ├── ProductMedia
+       │
+       └── ProductStatus
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Value Objects
 
-## Contributing
+Domänenrelevante Werte werden nicht als primitive Datentypen
+durch die Anwendung transportiert.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Beispiele:
 
-## Code of Conduct
+- `ProductId` – typisierte UUIDv7
+- `VariantId` – typisierte UUIDv7
+- `Sku` – validierte Artikelnummer
+- `Money` – unveränderlicher Geldbetrag in Cents
+- `Size` – Variantenmerkmal
+- `Color` – Variantenmerkmal
+- `ProductMedia` – Medieninformationen
+- `ProductStatus` – typisierter Produktstatus
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Dadurch werden Validierung und Domänenregeln möglichst nah
+an den jeweiligen Werten und Konzepten modelliert.
 
-## Security Vulnerabilities
+## Geschäftsregeln
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Die Aktivierung eines Produkts ist beispielsweise keine einfache
+Statusänderung.
 
-## License
+Ein Produkt kann nur aktiviert werden, wenn:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- mindestens eine Kategorie vorhanden ist
+- mindestens eine Variante vorhanden ist
+- ein gültiger Preis größer als 0 vorhanden ist
+
+Diese Regel wird durch eine Specification ausgedrückt:
+
+    ProductCanBeActivatedSpecification
+
+Dadurch bleibt die Geschäftsregel unabhängig von Filament
+und der administrativen Benutzeroberfläche.
+
+## Domain Events
+
+Domänenrelevante Änderungen erzeugen Events.
+
+Beispiele:
+
+    ProductCreated
+    ProductActivated
+    VariantAddedToProduct
+
+Diese Events ermöglichen es, weitere Prozesse anzubinden,
+ohne die Catalog-Domäne direkt mit diesen Prozessen zu koppeln.
+
+## Repository Ports
+
+Die Domäne definiert ihre benötigten Repository-Schnittstellen:
+
+    ProductRepositoryInterface
+    CategoryRepositoryInterface
+
+Die konkrete Persistenz wird dadurch von der Domäne entkoppelt.
+
+Die Repository Interfaces bilden dabei die Output Ports
+der Domäne.
+
+## Admin Backend
+
+Das administrative Backend wird mit Filament umgesetzt.
+
+Filament übernimmt die Präsentations- und Administrationsschicht,
+während die eigentlichen Geschäftsregeln innerhalb der Domäne
+liegen.
+
+    Filament
+        │
+        ▼
+    Application
+        │
+        ▼
+    Domain
+        │
+        ├── Aggregate
+        ├── Value Objects
+        ├── Specifications
+        ├── Domain Events
+        └── Repository Ports
+
+## Technischer Stack
+
+- Zenv
+- PHP
+- Laravel
+- Filament
+- MySQL / PostgreSQL
+- Pest
+- PHPStan
+- Laravel Pint
+- Git
+
+## Ziel des Projekts
+
+Das Projekt zeigt, wie ein typisches E-Commerce-Problem mit
+Laravel strukturiert werden kann, wenn die Geschäftsdomäne
+und nicht das Framework den Mittelpunkt der Architektur bildet.
+
+Im Fokus stehen:
+
+- Domain-Driven Design
+- Aggregate und Invarianten
+- Value Objects
+- Specifications
+- Domain Events
+- Repository Ports
+- klare Verantwortlichkeiten
+- testbare Geschäftslogik
+- Filament als Admin UI
+- Laravel als Application-/Infrastructure-Framework
+
+Das Projekt ist bewusst klein gehalten.
+
+Die Komplexität liegt nicht in der Anzahl der Features,
+sondern in der Qualität des Domänenmodells.
