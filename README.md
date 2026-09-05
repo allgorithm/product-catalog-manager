@@ -1,184 +1,135 @@
-# Laravel Product Catalog
+<div align="center">
 
-Ein domänenorientiertes E-Commerce-Produktkatalog-System,
-entwickelt mit Zenv, Laravel und Filament.
+# ⚡️ Enterprise Product Catalog Manager (PCM)
 
-Das Projekt demonstriert die Umsetzung eines realistischen
-E-Commerce-Domänenmodells mit Domain-Driven Design (DDD).
+### **Laravel 13** · **Filament 5** · **PHP 8.4** · **Pure Domain-Driven Design (DDD)**
 
-Der Schwerpunkt liegt nicht auf einem einfachen CRUD-Backend,
-sondern auf der Modellierung von Geschäftsregeln, Invarianten,
-Value Objects, Domain Events und klar definierten Domänengrenzen.
+[![Tests](https://img.shields.io/badge/Tests-100%25%20Passing%20(Pest%2FPHPUnit)-brightgreen?style=for-the-badge&logo=pest)](tests/)
+[![Architecture](https://img.shields.io/badge/Domain%20Core-0%20Framework%20Dependencies-blueviolet?style=for-the-badge)](app/Domain/)
+[![Code Style](https://img.shields.io/badge/Code%20Style-Laravel%20Pint-orange?style=for-the-badge&logo=laravel)](https://laravel.com/docs/pint)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-## Architektur
+<p align="center">
+  <b>Tired of anemic models, untestable controllers, and spaghetti CRUD?</b><br>
+  This project is a clean, production-grade reference architecture showing how <b>Pure DDD, Hexagonal Architecture, CQRS</b>, and <b>Filament 5</b> come together in a high-performance eCommerce core.
+</p>
 
-Die Catalog-Domäne ist als eigenständiger Bounded Context strukturiert:
+⭐ **If you find this architecture inspiring or useful for your projects, please give it a Star!** ⭐
 
-    app/Domain/Catalog/
+[📖 Management Manual](docs/user-guides/product-catalog-manual.md) · [📐 Tactical Blueprint](.ai/specs/product-catalog/02-tactical-blueprint.md) · [📝 Changelog](changelog.md)
 
-    ├── Model/
-    │   ├── Product.php
-    │   ├── ProductVariant.php
-    │   ├── Category.php
-    │   └── ValueObjects/
-    │       ├── ProductId.php
-    │       ├── VariantId.php
-    │       ├── Sku.php
-    │       ├── Money.php
-    │       ├── Size.php
-    │       ├── Color.php
-    │       ├── ProductMedia.php
-    │       └── ProductStatus.php
-    │
-    ├── Specifications/
-    │   └── ProductCanBeActivatedSpecification.php
-    │
-    ├── Events/
-    │   ├── ProductCreated.php
-    │   ├── ProductActivated.php
-    │   └── VariantAddedToProduct.php
-    │
-    └── Repositories/
-        ├── ProductRepositoryInterface.php
-        └── CategoryRepositoryInterface.php
+</div>
 
-## Domain Model
+---
 
-`Product` bildet den Aggregate Root des Product-Aggregates.
+## 🌟 Why Star This Repository?
 
-Der Aggregate Root kapselt die relevanten Invarianten und
-kontrolliert Änderungen am Aggregate.
+Most Laravel tutorials stop at primitive MVC with fat models and database-coupled controllers. **This repository demonstrates real-world software craftsmanship:**
 
-    Product
-       │
-       ├── ProductVariant
-       │      ├── VariantId
-       │      ├── Sku
-       │      ├── Size
-       │      └── Color
-       │
-       ├── Money
-       │
-       ├── ProductMedia
-       │
-       └── ProductStatus
+* 💎 **100% Framework-Free Domain Core (`app/Domain/`)**: Zero `Illuminate\*` or `Filament\*` imports. The business logic lives independently and can run in any PHP runtime.
+* 🛡️ **Specification Pattern & Invariants**: Products cannot be published with missing variants, zero pricing, or unassigned categories (`ProductCanBeActivatedSpecification`). The Aggregate protects its own consistency boundary.
+* ⚡️ **Modern Filament 5 Backoffice**: Full-featured admin panel utilizing Filament 5 Schemas, inline table editing, dynamic status tabs, batch bulk actions, and nested repeaters.
+* 🔄 **Explicit CQRS & Event Sourcing Ready**: Write operations run through discrete Command Handlers (`CreateProduct`, `ChangeProductStatus`, `BulkChangeProductStatus`) emitting strongly-typed Domain Events (`ProductCreated`, `ProductStatusChanged`).
+* 🗄️ **Data Mapper Pattern**: Clean separation between in-memory Domain Entities and Eloquent Persistence Models via `ProductDataMapper`.
+* 🧪 **Multi-Level Test Suite**: Instant pure domain unit tests (<10ms), architecture constraint tests, and database integration tests with 100% green status.
+* 🛡️ **Zero Data Loss Policy**: Pre-configured with `DB::prohibitDestructiveCommands()` to protect against accidental table drops.
 
-## Value Objects
+---
 
-Domänenrelevante Werte werden nicht als primitive Datentypen
-durch die Anwendung transportiert.
+## 🏛️ Hexagonal Architecture & Bounded Context
 
-Beispiele:
+```
+                         ┌─────────────────────────────────┐
+                         │      Filament 5 Backoffice      │ (UI / Presentation)
+                         └────────────────┬────────────────┘
+                                          │
+                                          ▼
+                         ┌─────────────────────────────────┐
+                         │   Application Layer (CQRS)      │ (Commands & Handlers)
+                         └────────────────┬────────────────┘
+                                          │
+                    ┌─────────────────────┴─────────────────────┐
+                    ▼                                           ▼
+      ┌───────────────────────────┐               ┌───────────────────────────┐
+      │  Domain Layer (100% Pure) │               │   Infrastructure Layer    │
+      │  - Aggregate Root         │ ◄──[ Implements ]  - Eloquent Repositories │
+      │  - Entities & ValueObjects│               │  - Data Mappers           │
+      │  - Specifications         │               │  - MariaDB / Redis        │
+      │  - Domain Events & Ports  │               └───────────────────────────┘
+      └───────────────────────────┘
+```
 
-- `ProductId` – typisierte UUIDv7
-- `VariantId` – typisierte UUIDv7
-- `Sku` – validierte Artikelnummer
-- `Money` – unveränderlicher Geldbetrag in Cents
-- `Size` – Variantenmerkmal
-- `Color` – Variantenmerkmal
-- `ProductMedia` – Medieninformationen
-- `ProductStatus` – typisierter Produktstatus
+### Domain Core Overview (`app/Domain/Catalog/`)
 
-Dadurch werden Validierung und Domänenregeln möglichst nah
-an den jeweiligen Werten und Konzepten modelliert.
+```
+app/Domain/Catalog/
+├── Model/
+│   ├── Product.php                     # Aggregate Root (Invariant Enforcement)
+│   ├── ProductVariant.php              # Child Entity (Matrix validation)
+│   ├── Category.php                    # Entity
+│   └── ValueObjects/
+│       ├── ProductId.php               # Typed UUIDv7
+│       ├── VariantId.php               # Typed UUIDv7
+│       ├── Sku.php                     # Self-validating Value Object (Regex)
+│       ├── Money.php                   # Immutable Cents & Currency Value Object
+│       ├── Size.php & Color.php        # Variant Attributes
+│       ├── ProductMedia.php            # Media Value Object
+│       └── ProductStatus.php           # Backed Enum (DRAFT, ACTIVE, ARCHIVED)
+├── Specifications/
+│   └── ProductCanBeActivatedSpecification.php # Business Rule Specification
+├── Events/
+│   ├── ProductCreated.php
+│   ├── ProductStatusChanged.php
+│   └── VariantAddedToProduct.php
+└── Repositories/
+    ├── ProductRepositoryInterface.php  # Output Port
+    └── CategoryRepositoryInterface.php # Output Port
+```
 
-## Geschäftsregeln
+---
 
-Die Aktivierung eines Produkts ist beispielsweise keine einfache
-Statusänderung.
+## 🚀 Quick Start (Docker / Zenv)
 
-Ein Produkt kann nur aktiviert werden, wenn:
+```bash
+# 1. Clone the repository
+git clone https://github.com/allgorithm/product-catalog-manager.git
+cd product-catalog-manager
 
-- mindestens eine Kategorie vorhanden ist
-- mindestens eine Variante vorhanden ist
-- ein gültiger Preis größer als 0 vorhanden ist
+# 2. Start Docker Environment
+./zenv up -d
 
-Diese Regel wird durch eine Specification ausgedrückt:
+# 3. Setup Application (Migrations & Seeders)
+./zenv composer setup
 
-    ProductCanBeActivatedSpecification
+# 4. Run Tests & Code Quality Suite
+./zenv composer test
+./zenv composer csfix
+```
 
-Dadurch bleibt die Geschäftsregel unabhängig von Filament
-und der administrativen Benutzeroberfläche.
+Access the Filament 5 Admin Panel at **`http://localhost/admin`**.
 
-## Domain Events
+---
 
-Domänenrelevante Änderungen erzeugen Events.
+## 🧪 Architecture & Quality Verification
 
-Beispiele:
+This repository enforces architecture boundary tests to guarantee zero framework leakage:
 
-    ProductCreated
-    ProductActivated
-    VariantAddedToProduct
+```bash
+# Verify that Domain layer has 0 framework dependencies:
+./zenv artisan test tests/Architecture/DomainArchitectureTest.php
 
-Diese Events ermöglichen es, weitere Prozesse anzubinden,
-ohne die Catalog-Domäne direkt mit diesen Prozessen zu koppeln.
+# Run full test suite:
+./zenv artisan test
+```
 
-## Repository Ports
+---
 
-Die Domäne definiert ihre benötigten Repository-Schnittstellen:
+## 💫 Give it a Star!
 
-    ProductRepositoryInterface
-    CategoryRepositoryInterface
+If this project helped you understand how to implement **Clean Architecture & DDD in modern Laravel 13**, please consider giving this repo a **Star (⭐️)**! It helps more developers discover decoupled software design in the PHP ecosystem.
 
-Die konkrete Persistenz wird dadurch von der Domäne entkoppelt.
+---
 
-Die Repository Interfaces bilden dabei die Output Ports
-der Domäne.
+### 📄 License
 
-## Admin Backend
-
-Das administrative Backend wird mit Filament umgesetzt.
-
-Filament übernimmt die Präsentations- und Administrationsschicht,
-während die eigentlichen Geschäftsregeln innerhalb der Domäne
-liegen.
-
-    Filament
-        │
-        ▼
-    Application
-        │
-        ▼
-    Domain
-        │
-        ├── Aggregate
-        ├── Value Objects
-        ├── Specifications
-        ├── Domain Events
-        └── Repository Ports
-
-## Technischer Stack
-
-- Zenv
-- PHP
-- Laravel
-- Filament
-- MySQL / PostgreSQL
-- Pest
-- PHPStan
-- Laravel Pint
-- Git
-
-## Ziel des Projekts
-
-Das Projekt zeigt, wie ein typisches E-Commerce-Problem mit
-Laravel strukturiert werden kann, wenn die Geschäftsdomäne
-und nicht das Framework den Mittelpunkt der Architektur bildet.
-
-Im Fokus stehen:
-
-- Domain-Driven Design
-- Aggregate und Invarianten
-- Value Objects
-- Specifications
-- Domain Events
-- Repository Ports
-- klare Verantwortlichkeiten
-- testbare Geschäftslogik
-- Filament als Admin UI
-- Laravel als Application-/Infrastructure-Framework
-
-Das Projekt ist bewusst klein gehalten.
-
-Die Komplexität liegt nicht in der Anzahl der Features,
-sondern in der Qualität des Domänenmodells.
+Open-sourced software licensed under the [MIT license](LICENSE).
