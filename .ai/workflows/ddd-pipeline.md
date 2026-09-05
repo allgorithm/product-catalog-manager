@@ -39,7 +39,15 @@ Dieser Workflow transformiert eine fachliche Anforderung in ein vollständiges, 
           (./zenv artisan test, ./zenv php vendor/bin/pint)
      │
      ├── (Rot / Fehler) ──────────► Loop zurück zu Phase 3
-     └── (Grün) ──────────────────► Feature Done / Merge Ready
+     └── (Grün) 
+            │
+            ▼
+[Phase 6: Management- &           ──► Agent: management-doc-writer.md
+          Bedienungsanleitung]
+          (docs/user-guides/[feature]-manual.md)
+            │
+            ▼
+        Feature Done / Merge Ready
 ```
 
 ---
@@ -117,11 +125,33 @@ Dieser Workflow transformiert eine fachliche Anforderung in ein vollständiges, 
 
 ### 🔹 Phase 5: Quality Gate & Verifikation
 * **Agent**: `.ai/agents/quality-gatekeeper.md`
+* **Sicherheits-Vorgabe (Data Loss Prevention)**:
+  - **VERBOTEN**: `artisan migrate:fresh`, `db:wipe` oder `migrate:reset`.
+  - Schema-Updates dürfen ausschließlich **inkrementell** via `./zenv artisan migrate` ausgeführt werden.
 * **Aktionen**:
-  1. Tests ausführen: `./zenv artisan test` (oder `./zenv php vendor/bin/phpunit`).
-  2. Code Style & Pint ausführen: `./zenv php vendor/bin/pint --test`.
-  3. Bei Fehlern: Automatisierte Korrekturschleife mit `enterprise-implementer.md`.
-  4. Bei Erfolg: Feature ist verifiziert und produktionsbereit.
+  1. Migrationen prüfen/ausführen: `./zenv artisan migrate` (nicht-destruktiv).
+  2. Tests ausführen: `./zenv artisan test` (oder `./zenv php vendor/bin/phpunit`).
+  3. Code Style & Pint ausführen: `./zenv php vendor/bin/pint --test`.
+  4. Bei Fehlern: Automatisierte Korrekturschleife mit `enterprise-implementer.md`.
+  5. Bei Erfolg: Feature ist verifiziert und produktionsbereit.
+
+---
+
+### 🔹 Phase 6: Management-Handbuch & Bedienungsanleitung
+* **Agent**: `.ai/agents/management-doc-writer.md`
+* **Input**: 
+  - `01-strategic-analysis.md` (Ubiquitous Language)
+  - `02-tactical-blueprint.md` (Geschäftsregeln & Invarianten)
+  - Implementierte Filament/Livewire Ressourcen
+* **Ziel**: Erstellung einer leicht verständlichen, professionellen Dokumentation für Management, Product Owner und Endanwender.
+* **Inhalte**:
+  1. **Executive Summary & Business Value**: Welches Problem wird gelöst?
+  2. **Funktionsübersicht**: Tabellarischer Überblick aller Kernfunktionen.
+  3. **Klick-Pfade & Schritt-für-Schritt How-To**: Wie werden Produkte angelegt, Varianten gepflegt und freigegeben?
+  4. **Geschäftsregeln & Schutzmechanismen**: Erklärung der System-Invarianten ohne technischen Jargon.
+  5. **Effizienz-Tipps**: Such-, Filter-, Sortierfunktionen, Inline-Editing und Bulk Actions.
+  6. **FAQ & Fehlerbehebung**: Antworten auf häufige Anwenderfragen.
+* **Output-Artefakt**: `docs/user-guides/[feature-name]-manual.md`
 
 ---
 

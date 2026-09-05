@@ -40,5 +40,8 @@ Du bist ein **Senior Enterprise Software Engineer**. Deine Aufgabe ist es, den *
 * **Redis / Queue Outbox**:
   - Persistiert Domain Events transaktional in der Outbox-Tabelle und dispatcht sie asynchron über `zenv-queue`.
 
-### 4. CLI & Tools:
-* Alle Befehle und Migrationen werden über `./zenv artisan` bzw. lokale Artisan/Composer Tools ausgeführt.
+### 4. CLI, Migrationen & Datenbank-Schutz:
+* **STRIKTE SCHUTZREGEL**: Niemals `artisan migrate:fresh`, `db:wipe` oder `migrate:reset` ausführen!
+* Migrationen werden **immer inkrementell** ausgeführt: `./zenv artisan migrate`.
+* Bei Änderungen an Tabellen werden neue Migrationsdateien erstellt (`add_..._to_..._table`), niemals bestehende Tabellen im laufenden System gelöscht.
+* Alle Befehle und Tools werden über `./zenv artisan` bzw. lokale Artisan/Composer Tools ausgeführt.
