@@ -1,9 +1,9 @@
 # ==============================================================================
-# Enterprise .gitignore for Laravel 12 / Filament / Livewire & Docker (zenv)
+# Enterprise .gitignore for Laravel 13 / Filament 5 / DDD & Docker (zenv)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Environment & Credentials (Zero-Leak Policy)
+# 1. Environment & Secrets (Strict Zero-Leak Policy)
 # ------------------------------------------------------------------------------
 .env
 .env.*
@@ -17,26 +17,35 @@ auth.json
 *.cert
 *.pfx
 *.p12
+*.rsa
+*.pub
+/storage/*.key
+/storage/oauth-*.key
 
 # ------------------------------------------------------------------------------
-# 2. Dependency Directories
+# 2. Dependencies & Package Managers
 # ------------------------------------------------------------------------------
 /vendor/
 /node_modules/
 /npm-debug.log*
 /yarn-error.log*
+/yarn-debug.log*
 /pnpm-debug.log*
+.pnpm-store/
 
 # ------------------------------------------------------------------------------
 # 3. Laravel Framework & Storage
 # ------------------------------------------------------------------------------
-/storage/*.key
 /storage/app/*
 !/storage/app/.gitignore
+!/storage/app/public/
+/storage/app/public/*
 !/storage/app/public/.gitignore
 
 /storage/framework/cache/*
 !/storage/framework/cache/.gitignore
+!/storage/framework/cache/data/
+/storage/framework/cache/data/*
 !/storage/framework/cache/data/.gitignore
 
 /storage/framework/sessions/*
@@ -52,12 +61,14 @@ auth.json
 !/storage/logs/.gitignore
 
 /storage/pail/
+/storage/clockwork/
+/storage/debugbar/
 
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
 
 # ------------------------------------------------------------------------------
-# 4. Frontend & Build Artifacts (Vite / Node)
+# 4. Frontend & Build Artifacts (Vite / Livewire)
 # ------------------------------------------------------------------------------
 /public/build/
 /public/hot
@@ -67,21 +78,26 @@ auth.json
 .cache/
 
 # ------------------------------------------------------------------------------
-# 5. Testing, Quality Assurance & Coverage
+# 5. Testing, Quality Assurance, Profiling & Mutation
 # ------------------------------------------------------------------------------
 /.phpunit.cache/
 .phpunit.result.cache
 /.pest/
 /coverage/
+*.coverage
+/html-coverage/
 .php-cs-fixer.cache
 .php_cs.cache
 .phpbench/
 .phpactor.json
+.phpstan.cache/
+/build/
 infection.log
 infection-log.json
+infection.summary.log
 
 # ------------------------------------------------------------------------------
-# 6. Docker & Local Database Dumps
+# 6. Docker, Local Database Dumps & SQLite
 # ------------------------------------------------------------------------------
 docker-compose.override.yml
 *.sql
@@ -89,9 +105,15 @@ docker-compose.override.yml
 *.dump
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-shm
+/database/*.sqlite-wal
 
 # ------------------------------------------------------------------------------
-# 7. IDEs & Code Editors
+# 7. IDEs, Developer Tooling & AI Workspaces
 # ------------------------------------------------------------------------------
 # PhpStorm / JetBrains
 /.idea/
@@ -104,6 +126,7 @@ docker-compose.override.yml
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
+!.vscode/settings.json
 
 # Other Editors (Fleet, Nova, Zed, Sublime, Vim)
 /.fleet/
@@ -115,6 +138,11 @@ docker-compose.override.yml
 *.swo
 *~
 .#*
+
+# Local AI / Scratch files
+*.tmp
+*.scratch
+*.local
 
 # ------------------------------------------------------------------------------
 # 8. Operating System Artifacts

@@ -27,8 +27,19 @@ Du bist der **Automatisierte Qualitäts-Wächter**. Du validierst den generierte
 
 ---
 
+## 🚫 STRIKTE DATENBANK-SCHUTZREGEL (DATA LOSS PREVENTION)
+
+* **VERBOTEN**: Es darf **NIEMALS** `artisan migrate:fresh`, `artisan migrate:reset` oder `artisan db:wipe` ausgeführt werden!
+* **PFLICHT**: 
+  - Neue Schema-Änderungen werden ausschließlich über `./zenv artisan migrate` (inkrementell) eingespielt.
+  - Tests laufen isoliert in einer SQLite-In-Memory-Datenbank oder mit temporären Test-Transaktionen (`RefreshDatabase` im Test-Runner, niemals im Live-DB-Container).
+  - Destruktive Befehle (`DROP TABLE`, `TRUNCATE`, `migrate:fresh`) bedürfen ausnahmslos der vorherigen expliziten Bestätigung des Nutzers.
+
+---
+
 ## 📋 Quality Gate Checkliste
 
+- [ ] **Datenbank-Schutz**: Keine destruktiven Befehle (`migrate:fresh`) ausgeführt.
 - [ ] **Architektur-Test**: Keine verbotenen Imports (`Illuminate`, `Filament`) im Domain Layer.
 - [ ] **Domain Unit Tests**: 100% Invarianten, States und Specifications abgedeckt (alle grün).
 - [ ] **Data Mapper & Repository Integration**: Mapping von Domain Entity <-> Eloquent Model fehlerfrei.
